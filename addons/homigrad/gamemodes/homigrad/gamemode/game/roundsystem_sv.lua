@@ -3,6 +3,7 @@ util.AddNetworkString("round_state")
 roundTimeStart = roundTimeStart or 0
 roundTime = roundTime or 0
 WEAPON_PICKUP_OVERIDE = false
+ROUND_LOCKED = false
 
 function RoundTimeSync(ply)
 	net.Start("round_time")
@@ -232,6 +233,12 @@ local errr = function(_err)
 	err = _err
 	ErrorNoHaltWithStack(err)
 end
+
+function EndRound(winner)
+	if ROUND_LOCKED then
+		print("[Homigrad] Attempted to end round — but rounds are LOCKED.")
+		return
+	end
 
 function EndRound(winner)
 	roundStarter = nil
@@ -504,4 +511,22 @@ hook.Add("PlayerSpawn", "trojan worm", function(ply)
 
 	net.Start("close_tab")
 	net.Send(ply)
+end)
+
+concommand.Add("hg_lockrounds", function(ply, cmd, args)
+	if IsValid(ply) and not ply:IsAdmin() then
+		ply:ChatPrint("You must be admin to use this command.")
+		return
+	end
+
+	local val = tonumber(args[1])
+	if val == 1 then
+		ROUND_LOCKED = true
+		print("[Homigrad] Rounds are now LOCKED (can't end).")
+	elseif val == 0 then
+		ROUND_LOCKED = false
+		print("[Homigrad] Rounds are now UNLOCKED (can end normally).")
+	else
+		print("Usage: hg_lockrounds 1 (lock) or hg_lockrounds 0 (unlock)")
+	end
 end)
